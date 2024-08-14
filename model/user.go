@@ -10,7 +10,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const _uniqueKeyViolation = "23505"
+const (
+	_uniqueKeyViolation = "23505"
+)
 
 var (
 	db                   *sql.DB
@@ -31,6 +33,13 @@ func CloseDB() {
 	db.Close()
 }
 
+type UserModel interface {
+	GetAllUsers() ([]User, error)
+	Create() (User, error)
+	Update(id int) error
+	Delete(id int) error
+}
+
 type User struct {
 	ID         int     `json:"user_id"`
 	UserName   *string `json:"user_name"`
@@ -41,7 +50,7 @@ type User struct {
 	Department *string `json:"department"`
 }
 
-func GetAllUsers() ([]User, error) {
+func (u *User) GetAllUsers() ([]User, error) {
 	selectStmt := sq.
 		Select("*").
 		From("users")
@@ -73,7 +82,7 @@ func GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func Create(u User) (User, error) {
+func (u *User) Create() (User, error) {
 	insert := sq.
 		Insert("users").
 		Columns("user_name", "first_name", "last_name", "email", "user_status", "department").
@@ -95,7 +104,7 @@ func Create(u User) (User, error) {
 	return user, nil
 }
 
-func Update(id int, u User) error {
+func (u *User) Update(id int) error {
 	_, err := sq.Update("users").
 		Set("first_name", u.FirstName).
 		Set("last_name", u.LastName).
@@ -114,7 +123,7 @@ func Update(id int, u User) error {
 	return nil
 }
 
-func Delete(id int) error {
+func (u *User) Delete(id int) error {
 	_, err := sq.Delete("users").
 		Where(sq.Eq{"user_id": id}).
 		PlaceholderFormat(sq.Dollar).
